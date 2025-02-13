@@ -25,7 +25,7 @@ fn main() {
     ranking_context.time_window_start = 1693330518 - (6 * 30 * 24 * 60 * 60); // End time minus six months
 
     let (matches, events, mut teams) = load_data(
-        "./data/matchdata_sample_20230829.json".to_string(),
+        "../data/matchdata_sample_20230829.json".to_string(),
         &ranking_context
     );
 
@@ -34,5 +34,5 @@ fn main() {
     // Importantly, analyze_fit does not filter out teams that aren't ranking eligible.
     gen_rank_new(&matches, &events, &mut teams, &ranking_context);
 
-    analyze_fit(&teams, &matches, &ranking_context, true);
+    output_report(&teams);
 }

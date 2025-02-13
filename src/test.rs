@@ -1,30 +1,6 @@
 use crate::*;
 use rand::prelude::*;
 
-pub fn print_to_console(mut teams: Vec<Team>) {
-    teams.sort_by(|a, b| b.elo.partial_cmp(&a.elo).unwrap());
-
-    let mut rank = 1;
-    for t in teams {
-        if !t.ranking_eligible() { continue; }
-
-        println!("{8:3}. {6:20} | Elo {0:6.1} | Diff {7:6.1} | Seed {1:6.1} | PM {2:.3} | OW {3:.3} | EP {4:.3} | ON {5:.3} | $EARNED {9:.0}",
-            t.elo,
-            t.seed_points,
-            t.prize_money,
-            t.opponent_winnings,
-            t.event_participation,
-            t.opponent_network,
-            t.name,
-            t.elo - t.seed_points,
-            rank,
-            t.adjusted_winnings,
-        );
-
-        rank += 1;
-    }
-}
-
 // Lazy function that checks error while adjusting a certain factor. Note that you have to manually change the lines
 // To check different variables.
 pub fn ranking_var_checker() {
