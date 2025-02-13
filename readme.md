@@ -1,43 +1,62 @@
-Teams play meaningful matches in third-party events throughout the year. To reduce the burden on Major participants and streamline the Major qualification process, we’re going to leverage those match results to identify teams that should be invited to later qualification stages. 
+# Modified VRS
+This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS' has an error of 5%, while my Alternative VRS has an error of 1%.
 
-Our goals for the resulting Regional Standings are that they are accurate, not easily gamed, and have a transparent process.
+### Original VRS
+EWR Bucket 0.00 | Matches played:   521 | Win rate: 0.17 | ExWR: 0.05
+EWR Bucket 0.10 | Matches played:   718 | Win rate: 0.20 | ExWR: 0.15
+EWR Bucket 0.20 | Matches played:   792 | Win rate: 0.28 | ExWR: 0.25
+EWR Bucket 0.30 | Matches played:   818 | Win rate: 0.30 | ExWR: 0.35
+EWR Bucket 0.40 | Matches played:   917 | Win rate: 0.42 | ExWR: 0.45
+Total error from this model: 0.04955927052649679
 
-## Regional Standings
+### Alternative VRS
+EWR Bucket 0.00 | Matches played:   526 | Win rate: 0.07 | ExWR: 0.05
+EWR Bucket 0.10 | Matches played:   613 | Win rate: 0.15 | ExWR: 0.15
+EWR Bucket 0.20 | Matches played:   774 | Win rate: 0.28 | ExWR: 0.25
+EWR Bucket 0.30 | Matches played:   878 | Win rate: 0.35 | ExWR: 0.35
+EWR Bucket 0.40 | Matches played:   975 | Win rate: 0.44 | ExWR: 0.45
+Total error from this model: 0.010816920590655634
 
-We will use the Regional Standings to invite teams in future events, so the ideal model is one that predicts future match results. To that end, the current model incorporates the following factors:
+## Differences between old VRS and my version
+The four factor system is ported over from VRS, but each is modified, the idea being that:
+* Event Participation rewards playing big events.
+* Prize Money         rewards playing good at big events.
+* Opponent Network    rewards beating many opponents.
+* Opponent Winnings   rewards beating good opponents.
 
-1.	Team’s
-    -	Prize money earned
-2.	Beaten opponent’s
-    -	Prize money earned
-    - 	Number of teams beaten
-3.	Head-to-head results
+I've simplified the system where it didn't negatively effect performance. Current discourse around VRS shows very few people genuinely understand it, even people who claim to know what they're talking about. The goal is for teams to be able to understand why they're winning or losing points in the system.
 
-We know you’re interested in more details. In the coming weeks, this repository will host the actual code used to generate the standings along with a sample dataset.
+The biggest improvement you'd be looking to make is the curve functions. It currently applies:
+* Opp Net and Opp Win: Curve function at the end.
+* Prize Money: Square root under aggregation.
+* Event Participation: Log_10 under aggregation.
+I adjusted those to get small errors, but there's absolutely no logic behind any of them. Ideally, we'd look under the hood to get some sense of how we'd want to actually adjust these variables.
 
-## Invitations
+## Detailed.
+1. Event prize pool is calculated from the sum of the prize distribution, meaning qualifier events can now have prize pools. (Presumably just a bug in the original)
 
-We will update the standings periodically up until the open qualifiers. These final standings will determine which teams get invited to the closed qualifiers. All other teams will need to compete in the open qualifiers to secure their spot.
+2. All four factors, and Own Network, are scaled by the 5th best result. This makes Opp. Winnings and Opp. Network more important, while making the whole system more intuitive.
 
-The current standings can be found here:
--   [Europe](standings_europe.md)
--   [Americas](standings_americas.md)
--   [Asia](standings_asia.md)
+3. Removed "10 best results" cap for Event Participation and Prize Money, which could lead to tournaments becoming less valuable if they were arbitrarily made multi-stage by HLTV. Additionally, while teams shouldn't be able to grind opponents (Which they could if we removed the cap on Opp. Network and Opp. Winnings), there's nothing wrong with their grinding tournaments.
 
-## Evaluating the Model.
+4. RankingContext includes essentially all variables one would want to change, which makes the system easier to adjust.
 
-The approach we’re taking to evaluate the accuracy of our model is to measure the relationship between the expected and observed win rates in matches.
+#### LAN Wins
+5. LAN Wins completely removed. Event Participation is included instead, simply based on prize pool at events played at. Attempts at including LAN in this calculation only increased error: Below tier one, they're too arbitrary to reward.
 
-We run through each week of matches in our dataset and assign point values to the teams using the preceding week’s Regional Standings. Using the difference in point values, each match is then assigned an expected win rate. We break those win rates down into 5% bins, and then measure the actual win rates for matches that fall within each bin.
+#### Bounty Offered
+6. "Bounty Offered" renamed to "Prize Money". Bounty Offered/Collected gives the impression that something is lost or taken. Prize Money gives a better intuition of what it's actually measuring.
 
-Here’s how the expected vs. observed win rates look when we go through this process with the current model:
+7. Square Root instead of the Curve Function as a final adjustment. This punishes low-prize-money-teams more heavily and is easier to understand. Lowers error by just a bit.
 
-<img src="modelfit.png"/>
- 
-There’s a strong relationship between expected and observed win rates. The correlation between the two (Spearman’s rho in this case) is 0.98. But the slope is shallower than we’d like--in an ideal world, the slope of this line would be closer to 1. The current model tends to underestimate win rates at the low end and overestimate at the high end. 
+#### Bounty Collected and Opponent Network
+8. Removed Event Weight for both, which is spun off into Event Participation instead. Previously both factors were often measuring event participation at least as much as what they were initially intended for, so this change makes each factor more inuitive. It also gives more weight to qualifiers and the like, which seems only fair.
 
-We think this is a good starting point. 
+#### H2H adjustment.
+9. Completely ripped out and replaced with a basic Elo equation. The current equation actually performs worse than the original one, but it's far clearer, so I believe it's worth it.
 
-## Updating and Improving the Model
+10. Elo is based on two main variables. A rank difference of 400 implies a 90% chance of victory (like in old VRS). K-constant defines how reactive Elo adjustments should be. Currently K = 32, which performed best in tests.
 
-The model we’re shipping today is the one we will use through the next Major. We’re going to keep experimenting, and we think you should too. After we ship the code and data in this repository, feel free to tinker and make something new. As long as your model does well and fits our goals, we’d be happy to consider it.
+11. ELO adjustment is calculated on a map-by-map-basis. This is the most important change by far. It single-handedly decreased model error by 2/3.
+
+12. Information context removed from Elo results, which simplifies the equation some more. Elo naturally makes older results less relevant anyway, and I believe the old system was slightly too reactive.

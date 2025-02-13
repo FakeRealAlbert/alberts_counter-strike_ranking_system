@@ -1,6 +1,1 @@
-*.csv
-*.tmp
-*.json
-/data/*
-!/data/matchdata_sample*
-/tools
+/target
