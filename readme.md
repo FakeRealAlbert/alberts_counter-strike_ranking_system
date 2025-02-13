@@ -4,20 +4,24 @@ This project tries to improve on Valve's current Ranking System. It's both signi
 ### Original VRS
 
 | EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+|--|--|--|--|
 | 0.00 | 521 | 0.17 | 0.05 | 
 | 0.10 | 718 | 0.20 | 0.15 |
 | 0.20 | 792 | 0.28 | 0.25 |
 | 0.30 | 818 | 0.30 | 0.35 |
 | 0.40 | 917 | 0.42 | 0.45 |
+
 Total error from this model: 0.04955927052649679
 
 ### Alternative VRS
 | EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+|--|--|--|--|
 | 0.00 | 526 | 0.07 | 0.05 | 
 | 0.10 | 613 | 0.15 | 0.15 |
 | 0.20 | 774 | 0.28 | 0.25 |
 | 0.30 | 878 | 0.35 | 0.35 |
 | 0.40 | 975 | 0.44 | 0.45 |
+
 Total error from this model: 0.010816920590655634
 
 ## Differences between old VRS and my version
