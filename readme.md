@@ -2,19 +2,22 @@
 This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS' has an error of 5%, while my Alternative VRS has an error of 1%.
 
 ### Original VRS
-EWR Bucket 0.00 | Matches played:   521 | Win rate: 0.17 | ExWR: 0.05
-EWR Bucket 0.10 | Matches played:   718 | Win rate: 0.20 | ExWR: 0.15
-EWR Bucket 0.20 | Matches played:   792 | Win rate: 0.28 | ExWR: 0.25
-EWR Bucket 0.30 | Matches played:   818 | Win rate: 0.30 | ExWR: 0.35
-EWR Bucket 0.40 | Matches played:   917 | Win rate: 0.42 | ExWR: 0.45
+
+| EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+| 0.00 | 521 | 0.17 | 0.05 | 
+| 0.10 | 718 | 0.20 | 0.15 |
+| 0.20 | 792 | 0.28 | 0.25 |
+| 0.30 | 818 | 0.30 | 0.35 |
+| 0.40 | 917 | 0.42 | 0.45 |
 Total error from this model: 0.04955927052649679
 
 ### Alternative VRS
-EWR Bucket 0.00 | Matches played:   526 | Win rate: 0.07 | ExWR: 0.05
-EWR Bucket 0.10 | Matches played:   613 | Win rate: 0.15 | ExWR: 0.15
-EWR Bucket 0.20 | Matches played:   774 | Win rate: 0.28 | ExWR: 0.25
-EWR Bucket 0.30 | Matches played:   878 | Win rate: 0.35 | ExWR: 0.35
-EWR Bucket 0.40 | Matches played:   975 | Win rate: 0.44 | ExWR: 0.45
+| EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+| 0.00 | 526 | 0.07 | 0.05 | 
+| 0.10 | 613 | 0.15 | 0.15 |
+| 0.20 | 774 | 0.28 | 0.25 |
+| 0.30 | 878 | 0.35 | 0.35 |
+| 0.40 | 975 | 0.44 | 0.45 |
 Total error from this model: 0.010816920590655634
 
 ## Differences between old VRS and my version
