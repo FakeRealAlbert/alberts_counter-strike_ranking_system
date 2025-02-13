@@ -1,5 +1,7 @@
 # Modified VRS
-This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS' has an error of 5%, while my Alternative VRS has an error of 1%.
+This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS has an error of 5%, while my Alternative VRS has an error of 1%.
+
+It's written in Rust for no particular reason. One file shows an implementation of the old VRS in Rust.
 
 ### Original VRS
 
