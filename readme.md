@@ -3,6 +3,8 @@ This project tries to improve on Valve's current Ranking System. It's both signi
 
 It's written in Rust for no particular reason. One file shows an implementation of the old VRS in Rust.
 
+If you have any questions, you can send me an email at mail@albertengan.no. 
+
 ### Original VRS
 
 | EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
@@ -40,6 +42,7 @@ The curve functions are the most arbitrary part of the system, currently:
 * Opp Net and Opp Win: One over log_10 curve function at the end.
 * Prize Money: Square root under aggregation.
 * Event Participation: Log_10 under aggregation.
+
 These were all set to minimise error, but there's absolutely no logic behind any of them, and so it's hard to say what they're doing under the hood.
 
 Additionally, the system could be taking round wins into account, but that would require some more complicated math in the elo system (and you might be getting diminishing returns for the extra complexity).
