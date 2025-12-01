@@ -1,38 +1,53 @@
 # Modified VRS
-This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS' has an error of 5%, while my Alternative VRS has an error of 1%.
+This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS has an error of 5%, while my Alternative VRS has an error of 1%.
+
+It's written in Rust for no particular reason. One file shows an implementation of the old VRS in Rust.
+
+If you have any questions, you can send me an email at mail@albertengan.no. 
 
 ### Original VRS
-EWR Bucket 0.00 | Matches played:   521 | Win rate: 0.17 | ExWR: 0.05
-EWR Bucket 0.10 | Matches played:   718 | Win rate: 0.20 | ExWR: 0.15
-EWR Bucket 0.20 | Matches played:   792 | Win rate: 0.28 | ExWR: 0.25
-EWR Bucket 0.30 | Matches played:   818 | Win rate: 0.30 | ExWR: 0.35
-EWR Bucket 0.40 | Matches played:   917 | Win rate: 0.42 | ExWR: 0.45
+
+| EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+|--|--|--|--|
+| 0.00 | 521 | 0.17 | 0.05 | 
+| 0.10 | 718 | 0.20 | 0.15 |
+| 0.20 | 792 | 0.28 | 0.25 |
+| 0.30 | 818 | 0.30 | 0.35 |
+| 0.40 | 917 | 0.42 | 0.45 |
+
 Total error from this model: 0.04955927052649679
 
 ### Alternative VRS
-EWR Bucket 0.00 | Matches played:   526 | Win rate: 0.07 | ExWR: 0.05
-EWR Bucket 0.10 | Matches played:   613 | Win rate: 0.15 | ExWR: 0.15
-EWR Bucket 0.20 | Matches played:   774 | Win rate: 0.28 | ExWR: 0.25
-EWR Bucket 0.30 | Matches played:   878 | Win rate: 0.35 | ExWR: 0.35
-EWR Bucket 0.40 | Matches played:   975 | Win rate: 0.44 | ExWR: 0.45
+| EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
+|--|--|--|--|
+| 0.00 | 526 | 0.07 | 0.05 | 
+| 0.10 | 613 | 0.15 | 0.15 |
+| 0.20 | 774 | 0.28 | 0.25 |
+| 0.30 | 878 | 0.35 | 0.35 |
+| 0.40 | 975 | 0.44 | 0.45 |
+
 Total error from this model: 0.010816920590655634
 
 ## Differences between old VRS and my version
 The four factor system is ported over from VRS, but each is modified, the idea being that:
 * Event Participation rewards playing big events.
-* Prize Money         rewards playing good at big events.
-* Opponent Network    rewards beating many opponents.
-* Opponent Winnings   rewards beating good opponents.
+* Prize Money rewards playing good at big events.
+* Opponent Network rewards beating many opponents.
+* Opponent Winnings rewards beating good opponents.
 
-I've simplified the system where it didn't negatively effect performance. Current discourse around VRS shows very few people genuinely understand it, even people who claim to know what they're talking about. The goal is for teams to be able to understand why they're winning or losing points in the system.
+The Elo adjustment now looks at map and not match wins, which represents the biggest improvoment in error. Outside of performance, I've focused on simplifying the system by moving and removing variables, names and code almost everywhere in the system. 
 
-The biggest improvement you'd be looking to make is the curve functions. It currently applies:
-* Opp Net and Opp Win: Curve function at the end.
+## Possible Improvements
+The curve functions are the most arbitrary part of the system, currently:
+* Opp Net and Opp Win: One over log_10 curve function at the end.
 * Prize Money: Square root under aggregation.
 * Event Participation: Log_10 under aggregation.
-I adjusted those to get small errors, but there's absolutely no logic behind any of them. Ideally, we'd look under the hood to get some sense of how we'd want to actually adjust these variables.
 
-## Detailed.
+These were all set to minimise error, but there's absolutely no logic behind any of them, and so it's hard to say what they're doing under the hood.
+
+Additionally, the system could be taking round wins into account, but that would require some more complicated math in the elo system (and you might be getting diminishing returns for the extra complexity).
+
+## Detailed Differences.
 1. Event prize pool is calculated from the sum of the prize distribution, meaning qualifier events can now have prize pools. (Presumably just a bug in the original)
 
 2. All four factors, and Own Network, are scaled by the 5th best result. This makes Opp. Winnings and Opp. Network more important, while making the whole system more intuitive.
