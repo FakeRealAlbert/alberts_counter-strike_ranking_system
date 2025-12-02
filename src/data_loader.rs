@@ -297,10 +297,6 @@ impl Team {
             matches_won: 0,
         }
     }
-
-    pub fn ranking_eligible(&self) -> bool {
-        self.matches_played >= 10 && self.matches_won >= 1 
-    }
 }
 
 fn default_information_context() -> f64 { 1.0 }

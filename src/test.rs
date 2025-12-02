@@ -72,7 +72,6 @@ pub fn analyze_fit(teams: &[Team], matches: &[Match], ranking_context: &RankingC
 
     if verbose {
         println!("Total error from this model: {error}");
-        println!("Total large error from this model: {large_error}");
     }
 
     error

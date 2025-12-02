@@ -15,7 +15,6 @@ use report::*;
 
 /*
     Time Window is just set manually to encompass the first and last games in the sample dataset
-
     You can adjust the model with RankingContext.
 */ 
 
@@ -29,10 +28,13 @@ fn main() {
         &ranking_context
     );
 
-    // Note that teams which haven't won a game,or have played fewer than 10, are excluded from the ranking, but not from the vector.
-    // Instead, we use the method team.is_ranking_eligible() to filter them out.
-    // Importantly, analyze_fit does not filter out teams that aren't ranking eligible.
+    /*
+    Note that teams that haven't won a game or have played fewer than 10 are excluded from the ranking, but not from the vector.
+    Instead, we use the method team.is_ranking_eligible() to filter them out after the fact.
+    Importantly, analyze_fit does not filter out teams that aren't ranking eligible.
+    */
+
     gen_rank_new(&matches, &events, &mut teams, &ranking_context);
 
-    output_report(&teams);
+    output_report(&teams, &ranking_context);
 }

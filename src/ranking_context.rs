@@ -22,6 +22,9 @@ pub struct RankingContext {
 
     pub min_seeded_rank: f64,
     pub max_seeded_rank: f64,
+
+    pub min_matches_for_ranking: u32,
+    pub min_wins_for_ranking: u32,
 }
 
 impl RankingContext {
@@ -47,6 +50,9 @@ impl RankingContext {
 
             min_seeded_rank: 400.0,
             max_seeded_rank: 2000.0,
+
+            min_matches_for_ranking: 10,
+            min_wins_for_ranking: 1,
         }
     }
 

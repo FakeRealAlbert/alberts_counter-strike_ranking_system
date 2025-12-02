@@ -1,77 +1,96 @@
-# Modified VRS
-This project tries to improve on Valve's current Ranking System. It's both significantly simpler than the original, and performs significantly better. Errors for both models are calculated by comparing actual versus expected win rate for each game. VRS has an error of 5%, while my Alternative VRS has an error of 1%.
+# Alternative VRS
 
-It's written in Rust for no particular reason. One file shows an implementation of the old VRS in Rust.
+This is an alternative version of Valve's Regional Standings. My goal was two-fold: To make it more accurate, harder to manipulate, and easier to understand. 
 
-If you have any questions, you can send me an email at mail@albertengan.no. 
+As section 3 shows, it significantly outperforms VRS on accuracy. For the other two goals, I hope the explanation is of service. You can also see the source code in the "src" folder, and you can experiment with the source code yourself: The ranking_context includes about a dozen variables that significantly changes the rating system. I've written it in Rust. The original uses JavaScript, but I've no idea how to use that language.
+
+If you have any questions about the project, feel free to send me an email at <mail@albertengan.no>. I'm also at twitter, @FakeRealAlbert, but I probably won't see any messages over there.
+
+## 1. How the Alternative VRS works
+
+The basic structure is similar to VRS: We use four factors to calculate a starting rating and then make a Head-to-Head adjustment. The difference is in the details:
+
+The system's four factors are Price Winnings, Event Participation, Opponent Network, Opponent Winnings. In short, Opponent Network rewards beating many teams, Opponent Winnings rewards beating good teams, Event participation rewards playing many good events, and Price Winnings rewards playing good at many good events.
+
+In long:
+
+1. **Price Winnings**: For every event the team has played in, we add the *square root* of the team's prize winnings. Older events count for less.
+
+2. **Event Participation**: For every event the team has played in, we add the *logarithm base 10* of the total event prize pool. Older events count for less.
+
+3. **Opponent Winnings**: For every opponent the team has beaten, we consider their Price Winnings. Older results count for less. We sum up the ten highest scores.
+
+4. **Opponent Network**: For every opponent the team has beaten, we consider their Network, i.e. how many distinct teams they have beaten in the past 6 months, scaled by how long ago they beat them. Older results count for less. We sum up the ten highest scores.
+
+Every factor is then scaled so that the fifth best team automatically scores 1.000 on the metric and the worst team scores 0.000.
+
+The Head-to-Head adjustment is a basic Elo system, going through every map in every match in the past six months. Here we assume that a 400 rank differential gives the high ranked team a 90% chance of winning the game.
+
+## 2. Differences between AVRS and VRS
+
+The biggest improvement is that the Head-to-Head adjustment considers every *map* the team has played, not every *match*. In other words, if you win a game 2-0 rather than 2-1, you will earn more points. This gives the algorithm way more data to work with, and massively increases its precision for teams that have played very few games. 
+
+The second largest improvement is the removal of LAN Wins. That factor rewarded teams almost arbitrarily, since it only rewarded LAN play and didn't care about the level of competition. It was replaced with Event Participation: This is featured indirectly in VRS, since Opponent Network and Bounty Collected there are scaled by the event prize pool. Alternative VRS spins it off into its own factor, which has the side effect of making those two factors more intuitive. Lots of teams scored pooorly on Opponent Network because while they played lots of teams, they only did so in qualifiers without an event prize pool. The first stage of the Major, for example, has no event prize pool, and therefore improves neither factor.
+
+It has been pointed out before that Opponent Network correlates poorly with a team's chance of victory. I still included it, also increased its performance by scaling the best result to 1.000 (usually, the best team only scores .5 on the VRS), because it makes the system harder to manipulate. We need teams to play lots of games so that the H2H-adjustment can move them closer to their "actual" rating: VRS generally only breaks down with teams who play few games. By encouraging teams to play more games and more tournaments (with Opponent Network and Event Participation) we are actually just punishing the type of teams that VRS tend to overrate. This, for example, means it's very unlikely that teams should ever skip out on tournaments to maintain their rating.
+
+For a more detailed overview of the differences between the two, see the last section.
+
+## 3. Performance 
+
+Note that the test tests uses the matchdata sample from 2023, which is the only good datasource we have at the moment.
+
+The performance is calculated as such: We divide each match into five groups based on what we think are the chances of the lowest team in that match up. We then compare the average *actual* win rate of that team compared to the models *expected* average win rate. You can see a breakdown for each bucket in the two tables. The "average" error is just the average for each bucket, weighed based on how many teams are in that bucket.
+
+In summary, then, this basic test tells us that we should expect a normal team to be about 5% off their "actual" rating in VRS, and 1% off in AVRS. Also note that VRS performes significantly worse with very large rank differentials. AVRS is much more consistent.
 
 ### Original VRS
 
 | EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
 |--|--|--|--|
-| 0.00 | 521 | 0.17 | 0.05 | 
-| 0.10 | 718 | 0.20 | 0.15 |
-| 0.20 | 792 | 0.28 | 0.25 |
-| 0.30 | 818 | 0.30 | 0.35 |
-| 0.40 | 917 | 0.42 | 0.45 |
+| 0% | 521 | 17% | 5% | 
+| 10% | 718 | 20% | 15% |
+| 20% | 792 | 28% | 25% |
+| 30% | 818 | 30% | 35% |
+| 40% | 917 | 42% | 45% |
 
-Total error from this model: 0.04955927052649679
+Average error from this model: 4.956%
 
 ### Alternative VRS
 | EWR Bucket | Matches Played | Win Rate | Expected Win Rate |
 |--|--|--|--|
-| 0.00 | 526 | 0.07 | 0.05 | 
-| 0.10 | 613 | 0.15 | 0.15 |
-| 0.20 | 774 | 0.28 | 0.25 |
-| 0.30 | 878 | 0.35 | 0.35 |
-| 0.40 | 975 | 0.44 | 0.45 |
+| 0% | 526 | 7% | 5% | 
+| 10% | 613 | 15% | 15% |
+| 20% | 774 | 28% | 25% |
+| 30% | 878 | 35% | 35% |
+| 40% | 975 | 44% | 45% |
 
-Total error from this model: 0.010816920590655634
+Average error from this model: 1.082%
 
-## Differences between old VRS and my version
-The four factor system is ported over from VRS, but each is modified, the idea being that:
-* Event Participation rewards playing big events.
-* Prize Money rewards playing good at big events.
-* Opponent Network rewards beating many opponents.
-* Opponent Winnings rewards beating good opponents.
+## 4. Granular differences
 
-The Elo adjustment now looks at map and not match wins, which represents the biggest improvoment in error. Outside of performance, I've focused on simplifying the system by moving and removing variables, names and code almost everywhere in the system. 
+1. Event prize pool is calculated from the sum of the prize distribution, not the HLTV description.
 
-## Possible Improvements
-The curve functions are the most arbitrary part of the system, currently:
-* Opp Net and Opp Win: One over log_10 curve function at the end.
-* Prize Money: Square root under aggregation.
-* Event Participation: Log_10 under aggregation.
-
-These were all set to minimise error, but there's absolutely no logic behind any of them, and so it's hard to say what they're doing under the hood.
-
-Additionally, the system could be taking round wins into account, but that would require some more complicated math in the elo system (and you might be getting diminishing returns for the extra complexity).
-
-## Detailed Differences.
-1. Event prize pool is calculated from the sum of the prize distribution, meaning qualifier events can now have prize pools. (Presumably just a bug in the original)
-
-2. All four factors, and Own Network, are scaled by the 5th best result. This makes Opp. Winnings and Opp. Network more important, while making the whole system more intuitive.
+2. All four factors, and Own Network, are scaled by the 5th best result. This makes Opponent Winnings and Opponent Network more important, while making the whole system more intuitive.
 
 3. Removed "10 best results" cap for Event Participation and Prize Money, which could lead to tournaments becoming less valuable if they were arbitrarily made multi-stage by HLTV. Additionally, while teams shouldn't be able to grind opponents (Which they could if we removed the cap on Opp. Network and Opp. Winnings), there's nothing wrong with their grinding tournaments.
 
-4. RankingContext includes essentially all variables one would want to change, which makes the system easier to adjust.
-
 #### LAN Wins
-5. LAN Wins completely removed. Event Participation is included instead, simply based on prize pool at events played at. Attempts at including LAN in this calculation only increased error: Below tier one, they're too arbitrary to reward.
+LAN Wins completely removed. Event Participation is included instead, simply based on prize pool at events played at. Attempts at including LAN in this calculation only increased error: Below tier one, they're too arbitrary to reward.
 
 #### Bounty Offered
-6. "Bounty Offered" renamed to "Prize Money". Bounty Offered/Collected gives the impression that something is lost or taken. Prize Money gives a better intuition of what it's actually measuring.
+1. "Bounty Offered" renamed to "Prize Money". Bounty Offered/Collected gives the impression that something is lost or taken. Prize Money gives a better intuition of what it's actually measuring.
 
-7. Square Root instead of the Curve Function as a final adjustment. This punishes low-prize-money-teams more heavily and is easier to understand. Lowers error by just a bit.
+2. We use the Square Root instead of the Curve Function. This punishes low-prize-money-teams more heavily and is easier to understand. Lowers error by just a bit.
 
 #### Bounty Collected and Opponent Network
-8. Removed Event Weight for both, which is spun off into Event Participation instead. Previously both factors were often measuring event participation at least as much as what they were initially intended for, so this change makes each factor more inuitive. It also gives more weight to qualifiers and the like, which seems only fair.
+Removed Event Weight for both, which is spun off into Event Participation instead. Previously both factors were often measuring event participation at least as much as what they were initially intended for, so this change makes each factor more inuitive. It also gives more weight to qualifiers and the like, which seems only fair.
 
 #### H2H adjustment.
-9. Completely ripped out and replaced with a basic Elo equation. The current equation actually performs worse than the original one, but it's far clearer, so I believe it's worth it.
+1. ELO adjustment is calculated on a map-by-map-basis. This is the most important change by far. It single-handedly decreased model error by 2/3.
 
-10. Elo is based on two main variables. A rank difference of 400 implies a 90% chance of victory (like in old VRS). K-constant defines how reactive Elo adjustments should be. Currently K = 32, which performed best in tests.
+2. Replaced with a basic Elo equation. The current equation actually performs worse than the original one, but the difference is pretty minor. VRS just used a glicko algorithm without ratings deviation, and that is essentially an Elo algorithm.
 
-11. ELO adjustment is calculated on a map-by-map-basis. This is the most important change by far. It single-handedly decreased model error by 2/3.
+3. Currently K = 32, which performed best in tests. It is set so that a rank differential of 400 implies a 90% chance of victory, like in old VRS.
 
-12. Information context removed from Elo results, which simplifies the equation some more. Elo naturally makes older results less relevant anyway, and I believe the old system was slightly too reactive.
+3. Information context removed from Elo results, which simplifies the equation some more. Elo naturally makes older results less relevant anyway, and I believe the old system was slightly too reactive.

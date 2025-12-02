@@ -16,7 +16,7 @@ pub fn elo_result(winner_elo: f64, loser_elo: f64, ranking_context: &RankingCont
 }
 
 fn seed_teams(matches: &[Match], events: &[Event], teams: &mut [Team], ranking_context: &RankingContext) {    
-    // FaZe 1: Own Network
+    // FaZe 1: Calculates Own Network
     for (idx, team) in teams.iter_mut().enumerate() {
         let mut opponents : Vec<(usize, f64)> = Vec::new();
 
@@ -43,7 +43,7 @@ fn seed_teams(matches: &[Match], events: &[Event], teams: &mut [Team], ranking_c
         }
     }
 
-    // FaZe 2: Events and Bounty Offered
+    // FaZe 2: Calculates Prize Winnings and Event Participation.
     for ev in events {
         for prize_dist in &ev.prize_distribution {
             if !prize_dist.is_in_ranking { continue; }
@@ -54,6 +54,7 @@ fn seed_teams(matches: &[Match], events: &[Event], teams: &mut [Team], ranking_c
         }
     }    
 
+    // Adjusts the three factors so that the nth highest score is 1.0
     let reference_winnings = nth_highest(teams, ranking_context, |t| t.adjusted_winnings);
     let reference_network  = nth_highest(teams, ranking_context, |t| t.own_network);
     let reference_event    = nth_highest(teams, ranking_context, |t| t.event_participation);
@@ -64,7 +65,7 @@ fn seed_teams(matches: &[Match], events: &[Event], teams: &mut [Team], ranking_c
         t.event_participation   = f64::min( t.event_participation / reference_event,1.0);
     }
 
-    // FaZe 3: Go through won matches again to calculate OPP NETWORK og BOUNTY COLLECTED
+    // FaZe 3: Calculates Opponent Winnings and Opponent Network
     for idx in 0..teams.len() {
         let mut opp_winnings = Vec::new();
         let mut opp_networks = Vec::new();

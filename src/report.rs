@@ -1,11 +1,11 @@
 use crate::*;
 
-pub fn print_to_console(mut teams: Vec<Team>) {
+pub fn print_to_console(mut teams: Vec<Team>, ranking_context: &RankingContext) {
     teams.sort_by(|a, b| b.elo.partial_cmp(&a.elo).unwrap());
 
     let mut rank = 1;
     for t in teams {
-        if !t.ranking_eligible() { continue; }
+        if !ranking_eligible(&t, &ranking_context) { continue; }
 
         println!("{8:3}. {6:20} | Elo {0:6.1} | Diff {7:6.1} | Seed {1:6.1} | PM {2:.3} | OW {3:.3} | EP {4:.3} | ON {5:.3} | $EARNED {9:.0}",
             t.elo,
@@ -24,10 +24,10 @@ pub fn print_to_console(mut teams: Vec<Team>) {
     }
 }
 
-pub fn output_report(teams: Vec<Team>) {
+pub fn output_report(teams: Vec<Team>, ranking_context: &RankingContext) {
     let mut i = 1;
     for t in teams {
-        if !t.ranking_eligible() { continue; }
+        if !ranking_eligible(&t, &ranking_context) { continue; }
 
         let players = format!("{}, {}, {}, {}, {}",t.core[0].nick,t.core[1].nick,t.core[2].nick,t.core[3].nick,t.core[4].nick);
 
@@ -40,4 +40,8 @@ pub fn output_report(teams: Vec<Team>) {
 
         i += 1;
     }
+}
+
+pub fn ranking_eligible(team: &Team, ranking_context: &RankingContext) -> bool {
+    team.matches_played >= ranking_context.min_matches_for_ranking && team.matches_won >= ranking_context.min_wins_for_ranking
 }
